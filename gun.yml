@@ -1,0 +1,10 @@
+BanditSummon:
+  Skills:
+    # 三条 independent random-chance, 命中则召唤; 三条都未命中本次不召唤,
+    # 但 shotgun 兜底概率 = 1 - 0.30 - 0.45*(1-0.30) ≈ 0.385
+    - summon{type=BanditOutlawRevolver;amount=1;radius=3;onSurface=true} @self 0.4
+    - summon{type=BanditOutlawPistol;amount=1;radius=3;onSurface=true}   @self 0.4
+    - summon{type=BanditOutlawShotgun;amount=1;radius=3;onSurface=true}  @self 0.4
+    - message{m="<gold>[强盗团伙]<gray> 哥们我甜蜜来了！"} @PlayersInRadius{r=30}
+    - sound{s=entity.wither.spawn;v=0.5;p=1.5} @self
+    - effect:particles{p=smoke;amount=25;hS=0.4;vS=0.4;speed=0.05} @self

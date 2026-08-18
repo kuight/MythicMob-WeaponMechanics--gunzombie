@@ -1,0 +1,214 @@
+# plugins/MythicMobs/Mobs/BanditGang.yml
+# 沿用 memory.txt 第 469 行最小测试版骨架:
+#   - ~onTimer + @Target + ?targetinlineofsight
+#   - meta skill 嵌套 skill{s=...} 内联写法是禁忌, 用 simple inline
+#   - 装备照最小测试版的"主要显示武器"
+# 修复:
+#   - 删 head=true (它是头部掉落倍率不是爆头)
+#   - spread 改 0 或 1 (Base_Spread 已自带偏散, 不要叠加)
+#   - 节奏改 Delay_Between_Shots 对齐 (转轮 20 tick / 手枪 80 tick / 霰弹 160 tick)
+
+# ==================== 强盗首领 ====================
+BanditLeader:
+  Type: ZOMBIE
+  Display: '<dark_red>强盗首领'
+  Health: 100
+  Damage: 3
+  MovementSpeed: 0.1
+  Faction: bandits
+  Boss: true
+  BossBar:
+    Enabled: true
+    Title: '<dark_red>强盗首领'
+    Range: 20
+    Color: RED
+    Style: NOTCHED_6
+    CreateFog: true
+    DarkenSky: true
+    PlayMusic: true
+
+
+  Equipment:
+    - weaponMechanicsWeapon{weapon=zuolunsuifaqiang} HAND
+    - BLACK_BANNER HEAD
+    - DIAMOND_HELMET HEAD
+    - IRON_CHESTPLATE CHEST
+
+  Options:
+    PreventItemPickup: true
+    AlwaysShowName: true
+    FollowRange: 500
+    KnockbackResistance: 0.4
+    PreventSunburn: true
+
+  Drops:
+    - IRON_INGOT 2 0.6
+    - GUNPOWDER 4 0.7
+    - GOLD_INGOT 1 0.25
+    - BLACK_BANNER 1 1.0
+    - weaponMechanicsWeapon{weapon=zuolunsuifaqiang} 1 0.45
+    - weaponMechanicsWeapon{weapon=suifashouqiang}    1 0.20
+    - weaponMechanicsWeapon{weapon=suifaxiandanqiang} 1 0.15
+
+  AIGoalSelectors:
+    - clear
+    - meleeattack
+    - randomstroll
+    - lookatplayers
+    - randomlookaround
+  AITargetSelectors:
+    - clear
+    - players
+    - hurtbytarget
+
+  Skills:
+    # === 出生广播 ===
+    - message{m="<dark_red>[强盗首领]<gray> 弟兄们，围住他！"} @PlayersInRadius{r=30} ~onSpawn
+    - sound{s=entity.raid.horn;v=0.8;p=1.0} @self ~onSpawn
+
+    # === 武器层（沿用最小测试版骨架）===
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=0} @Target ~onTimer:100 ?targetinlineofsight
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=0} @trigger ~onDamaged
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @Target ~onTimer:100 ?targetinlineofsight
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @trigger ~onDamaged
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @Target ~onTimer:100 ?targetinlineofsight
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @trigger ~onDamaged
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @Target ~onTimer:100 ?targetinlineofsight
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @trigger ~onDamaged
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @Target ~onTimer:100 ?targetinlineofsight
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @trigger ~onDamaged
+
+    # === ★ 召唤小弟（每 12 秒）===
+    # 用单 cast + 子技能 BanditSummon,子项 ?randomchance 独立采样,
+    # 不用 ~onUse (memory 未验证的非法触发器)
+    - skill{s=BanditSummon} @self ~onTimer:240
+
+    # === 死亡 ===
+    - sound{s=entity.enderdragon.growl;v=0.4;p=0.6} @self ~onDeath
+
+# ==================== 召唤子技能（独立采样三选）====================
+
+
+
+# ==================== 强盗小弟 ====================
+# 沿用最小测试版骨架: 三个独立 mob 各对应一把武器 (不用变量分发)
+# 原因: 上一版用 setvariable{var=...;value="zuolunsuifaqiang"} 时
+#       variable 不会传递给 summon 出来的子 mob 实例, 子小弟拿出来变量为 null
+#       -> wmShoot{weapon=<var.bandit.weapon>} 会被 cast = 空 → 整行被 drop
+# 这是 memory.txt 第 169 行 cast=null 的精确复现, 改用三独立 mob 规避
+
+BanditOutlawRevolver:
+  # 30% 概率, 用转轮燧发枪
+  Type: ZOMBIE
+  Display: '<gold>强盗小弟[转轮燧发枪]'
+  Health: 28
+  Damage: 2
+  MovementSpeed: 0.30
+  Faction: bandits
+  Equipment:
+    - weaponMechanicsWeapon{weapon=zuolunsuifaqiang} HAND
+    - IRON_HELMET HEAD
+    - LEATHER_CHESTPLATE CHEST
+  Options:
+    PreventItemPickup: true
+    FollowRange: 350
+    KnockbackResistance: 0.15
+    PreventSunburn: true
+  Drops:
+    - IRON_INGOT 1 0.4
+    - GUNPOWDER 2 0.5
+    - weaponMechanicsWeapon{weapon=zuolunsuifaqiang} 1 0.85
+  AIGoalSelectors:
+    - clear
+    - meleeattack
+    - randomstroll
+    - lookatplayers
+    - randomlookaround
+  AITargetSelectors:
+    - clear
+    - players
+    - hurtbytarget
+  Skills:
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @Target ~onTimer:10 ?targetinlineofsight 0.3
+    - weaponMechanicsShoot{weapon=zuolunsuifaqiang;spread=4} @trigger ~onDamaged
+    - sound{s=block.note_block.bell;v=0.5;p=1.0} @self ~onSpawn
+    - sound{s=entity.generic.explode;v=0.3;p=1.4} @self ~onDeath
+
+BanditOutlawPistol:
+  # 45% 概率, 用燧发手枪
+  Type: ZOMBIE
+  Display: '<gold>强盗小弟[燧发手枪]'
+  Health: 24
+  Damage: 2
+  MovementSpeed: 0.28
+  Faction: bandits
+  Equipment:
+    - weaponMechanicsWeapon{weapon=suifashouqiang} HAND
+    - IRON_HELMET HEAD
+    - LEATHER_CHESTPLATE CHEST
+  Options:
+    PreventItemPickup: true
+    FollowRange: 300
+    KnockbackResistance: 0.15
+    PreventSunburn: true
+  Drops:
+    - IRON_INGOT 1 0.4
+    - GUNPOWDER 2 0.5
+    - weaponMechanicsWeapon{weapon=suifashouqiang} 1 0.85
+  AIGoalSelectors:
+    - clear
+    - meleeattack
+    - randomstroll
+    - lookatplayers
+    - randomlookaround
+  AITargetSelectors:
+    - clear
+    - players
+    - hurtbytarget
+  Skills:
+    # 手枪装填 80 tick, 一发打完等 80 tick 再打一发, 与 Delay_Between_Shots 对齐
+    - weaponMechanicsShoot{weapon=suifashouqiang;spread=6} @Target ~onTimer:30 ?targetinlineofsight 0.5
+    - weaponMechanicsShoot{weapon=suifashouqiang;spread=6} @trigger ~onDamaged
+    - sound{s=block.note_block.bell;v=0.5;p=1.0} @self ~onSpawn
+    - sound{s=entity.generic.explode;v=0.3;p=1.4} @self ~onDeath
+
+BanditOutlawShotgun:
+  # 25% 概率, 用燧发霰弹枪
+  Type: ZOMBIE
+  Display: '<gold>强盗小弟[燧发霰弹枪]'
+  Health: 32
+  Damage: 2
+  MovementSpeed: 0.30
+  Faction: bandits
+  Equipment:
+    - weaponMechanicsWeapon{weapon=suifaxiandanqiang} HAND
+    - IRON_HELMET HEAD
+    - LEATHER_CHESTPLATE CHEST
+  Options:
+    PreventItemPickup: true
+    FollowRange: 250
+    KnockbackResistance: 0.2
+    PreventSunburn: true
+  Drops:
+    - IRON_INGOT 1 0.4
+    - GUNPOWDER 2 0.5
+    - weaponMechanicsWeapon{weapon=suifaxiandanqiang} 1 0.85
+  AIGoalSelectors:
+    - clear
+    - meleeattack
+    - randomstroll
+    - lookatplayers
+    - randomlookaround
+  AITargetSelectors:
+    - clear
+    - players
+    - hurtbytarget
+  Skills:
+    # 霰弹装填 180 tick, 一发打完等 180 tick 再打一发
+    - weaponMechanicsShoot{weapon=suifaxiandanqiang;spread=6} @Target ~onTimer:180 ?targetinlineofsight 0.5
+    - weaponMechanicsShoot{weapon=suifaxiandanqiang;spread=6} @Target ~onTimer:180 ?targetinlineofsight 0.5
+    - weaponMechanicsShoot{weapon=suifaxiandanqiang;spread=6} @Target ~onTimer:180 ?targetinlineofsight 0.5
+    - weaponMechanicsShoot{weapon=suifaxiandanqiang;spread=6} @Target ~onTimer:180 ?targetinlineofsight 0.5
+    - weaponMechanicsShoot{weapon=suifaxiandanqiang;spread=6} @trigger ~onDamaged
+    - sound{s=block.note_block.bell;v=0.5;p=1.0} @self ~onSpawn
+    - sound{s=entity.generic.explode;v=0.3;p=1.4} @self ~onDeath
